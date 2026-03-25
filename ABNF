@@ -1,0 +1,40 @@
+; =====================================================
+; PROTOCOLO DAR - ABNF
+; =====================================================
+
+mensaje-cliente = login / ping / logout / salir / envio
+
+login           = usuario SP contrasena
+ping            = "PING"
+logout          = "LOGOUT"
+salir           = "Salir"
+
+envio           = "SEND" SP datos-envio
+
+datos-envio     = 1*(VCHAR / SP)
+
+usuario         = 1*(ALPHA / DIGIT / "_" / "-")
+contrasena      = 1*(ALPHA / DIGIT / "_" / "-" / ".")
+
+; =====================================================
+; RESPUESTAS DEL SERVIDOR
+; =====================================================
+
+mensaje-servidor = rsp-login-ok / rsp-login-error / rsp-pong / rsp-logout-ok / rsp-adios / rsp-envio-ok / rsp-error
+
+rsp-login-ok    = "Login correcto"
+rsp-login-error = "Credenciales incorrectas."
+rsp-pong        = "PONG"
+rsp-logout-ok   = "Logout Correcto"
+rsp-adios       = "Adios"
+rsp-envio-ok    = "Comando recibido por " usuario
+rsp-error       = "ERROR"
+
+; =====================================================
+; TERMINALES BASICOS
+; =====================================================
+
+SP              = %x20
+ALPHA           = %x41-5A / %x61-7A
+DIGIT           = %x30-39
+VCHAR           = %x21-7E
