@@ -1,0 +1,40 @@
+
+package servidor;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+/**
+ *
+ * @author jmcecilia
+ */
+public class Servidor_Principal {
+    private static final int Puerto= 5000;
+        
+    public static void main(String[] args ){
+        System.out.println("Iniciando servidor. ");
+        
+        try (ServerSocket servidorsocket= new ServerSocket (Puerto)){
+              System.out.println("Servidor escuchando en el puerto " + Puerto);
+              
+              while(true){
+                  Socket socketCliente= servidorsocket.accept();
+                  System.out.println("Cliente conectado");
+                  
+                  GestorCliente gestor= new GestorCliente(socketCliente);
+                 
+                  Thread hilo= new Thread(gestor);
+                  hilo.start();
+              
+              }
+        
+        }catch (IOException e){
+            System.err.println("Error de Servidor");
+        }
+    
+    
+    
+    }
+    
+}
