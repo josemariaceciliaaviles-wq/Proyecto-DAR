@@ -1,0 +1,58 @@
+package cliente;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class GestorConexion {
+
+    private Socket socket;
+    private BufferedReader entrada;
+    private PrintWriter salida;
+
+    public boolean conectar(String host, int puerto) {
+        try {
+            socket = new Socket(host, puerto);
+            entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            salida = new PrintWriter(socket.getOutputStream(), true);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error al conectar con el servidor: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public void enviarMensaje(String mensaje) {
+        if (salida != null) {
+            salida.println(mensaje);
+        }
+    }
+
+    public String recibirMensaje() {
+        try {
+            if (entrada != null) {
+                return entrada.readLine();
+            }
+        } catch (Exception e) {
+            System.out.println("Error al recibir mensaje: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public void cerrarConexion() {
+        try {
+            if (entrada != null) {
+                entrada.close();
+            }
+            if (salida != null) {
+                salida.close();
+            }
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Error al cerrar la conexión: " + e.getMessage());
+        }
+    }
+}
