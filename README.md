@@ -110,3 +110,7 @@ Supongamos que el servidor se ejecuta en una máquina cuya dirección IP es 192.
 - En la máquina cliente se lanza el cliente, que deberá conectarse a la IP 192.168.1.50 usando el puerto 5000.
 
 De este modo, la comunicación no se realiza en local, sino entre dos máquinas diferentes dentro de la misma red, que es el escenario previsto para la práctica.
+
+## 5. Captura de Wireshark
+
+Por problemas de instalación de wireshark en la maquina virtual, no se pudo capturar el trafico.
