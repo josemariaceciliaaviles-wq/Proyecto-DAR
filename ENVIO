@@ -1,0 +1,101 @@
+
+package modelo;
+
+/**
+ *
+ * @author jmcecilia
+ */
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+public class Envio {
+
+    private String idEnvio;
+    private String origen;
+    private String destino;
+    private String descripcion;
+    private String usuarioCreador;
+    private EstadoEnvio estado;
+    private LocalDateTime fechaCreacion;
+
+    public Envio(String idEnvio, String origen, String destino, String descripcion, String usuarioCreador) {
+        this.idEnvio = idEnvio;
+        this.origen = origen;
+        this.destino = destino;
+        this.descripcion = descripcion;
+        this.usuarioCreador = usuarioCreador;
+        this.estado = EstadoEnvio.CREADO;
+        this.fechaCreacion = LocalDateTime.now();
+    }
+
+    public String getIdEnvio() {
+        return idEnvio;
+    }
+
+    public void setIdEnvio(String idEnvio) {
+        this.idEnvio = idEnvio;
+    }
+
+    public String getOrigen() {
+        return origen;
+    }
+
+    public void setOrigen(String origen) {
+        this.origen = origen;
+    }
+
+    public String getDestino() {
+        return destino;
+    }
+
+    public void setDestino(String destino) {
+        this.destino = destino;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public String getUsuarioCreador() {
+        return usuarioCreador;
+    }
+
+    public void setUsuarioCreador(String usuarioCreador) {
+        this.usuarioCreador = usuarioCreador;
+    }
+
+    public EstadoEnvio getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoEnvio estado) {
+        this.estado = estado;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    @Override
+    public String toString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        return "Envio{" +
+                "idEnvio='" + idEnvio + '\'' +
+                ", origen='" + origen + '\'' +
+                ", destino='" + destino + '\'' +
+                ", descripcion='" + descripcion + '\'' +
+                ", usuarioCreador='" + usuarioCreador + '\'' +
+                ", estado=" + estado +
+                ", fechaCreacion=" + fechaCreacion.format(formatter) +
+                '}';
+    }
+}
+    
+
