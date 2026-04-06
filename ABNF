@@ -1,40 +1,134 @@
-; =====================================================
-; PROTOCOLO DAR - ABNF
-; =====================================================
+; =========================================================
+; PROTOCOLO CLIENTE-SERVIDOR DE GESTION DE ENVIOS
+; ABNF basada en el codigo implementado
+; =========================================================
 
-mensaje-cliente = login / ping / logout / salir / envio
+ALPHA          = %x41-5A / %x61-7A
+DIGIT          = %x30-39
+SP             = %x20
+CR             = %x0D
+LF             = %x0A
+CRLF           = CR LF
 
-login           = usuario SP contrasena
-ping            = "PING"
-logout          = "LOGOUT"
-salir           = "Salir"
+VCHAR          = %x21-7E
+CHAR_NO_SP     = %x21 / %x23-7E
 
-envio           = "SEND" SP datos-envio
+TOKEN          = 1*CHAR_NO_SP
+TEXT           = 1*(VCHAR / SP)
 
-datos-envio     = 1*(VCHAR / SP)
+; =========================================================
+; INICIO DE SESION
+; =========================================================
 
-usuario         = 1*(ALPHA / DIGIT / "_" / "-")
-contrasena      = 1*(ALPHA / DIGIT / "_" / "-" / ".")
+saludo                 = "Inicie sesion: " CRLF
 
-; =====================================================
+credenciales           = usuario SP contrasena CRLF
+usuario                = "admin"
+contrasena             = "finisterre"
+
+respuesta-login        = "Login correcto" CRLF
+                       / "Credenciales incorrectas." CRLF
+                       / "Conexion cerrada" CRLF
+
+; =========================================================
+; COMANDOS DEL CLIENTE
+; =========================================================
+
+mensaje-cliente        = credenciales
+                       / comando CRLF
+
+comando                = logout
+                       / ping
+                       / salir
+                       / crear-envio
+                       / consultar-envio
+                       / actualizar-envio
+                       / listar-envios
+                       / otro-comando
+
+logout                 = "LOGOUT"
+ping                   = "Ping"
+salir                  = "Salir"
+listar-envios          = "LISTAR_ENVIOS"
+
+crear-envio            = "CREAR_ENVIO" SP id-envio SP origen SP destino SP descripcion
+consultar-envio        = "CONSULTAR_ENVIO" SP id-envio
+actualizar-envio       = "ACTUALIZAR_ENVIO" SP id-envio
+
+otro-comando           = TEXT
+
+; =========================================================
+; CAMPOS
+; =========================================================
+
+id-envio               = TOKEN
+origen                 = TOKEN
+destino                = TOKEN
+descripcion            = TOKEN
+usuario-creador        = TOKEN / "null"
+
+; Nota:
+; En el codigo actual descripcion se obtiene con split(" ")
+; y por tanto solo admite una palabra sin espacios.
+
+; =========================================================
 ; RESPUESTAS DEL SERVIDOR
-; =====================================================
+; =========================================================
 
-mensaje-servidor = rsp-login-ok / rsp-login-error / rsp-pong / rsp-logout-ok / rsp-adios / rsp-envio-ok / rsp-error
+mensaje-servidor       = saludo
+                       / respuesta-login
+                       / respuesta-logout
+                       / respuesta-ping
+                       / respuesta-salir
+                       / respuesta-crear
+                       / respuesta-consultar
+                       / respuesta-actualizar
+                       / respuesta-listar
+                       / respuesta-generica
 
-rsp-login-ok    = "Login correcto"
-rsp-login-error = "Credenciales incorrectas."
-rsp-pong        = "PONG"
-rsp-logout-ok   = "Logout Correcto"
-rsp-adios       = "Adios"
-rsp-envio-ok    = "Comando recibido por " usuario
-rsp-error       = "ERROR"
+respuesta-logout       = "Logout Correcto" CRLF
 
-; =====================================================
-; TERMINALES BASICOS
-; =====================================================
+respuesta-ping         = "Pong" CRLF
 
-SP              = %x20
-ALPHA           = %x41-5A / %x61-7A
-DIGIT           = %x30-39
-VCHAR           = %x21-7E
+respuesta-salir        = "Conexion cerrada" CRLF
+
+respuesta-crear        = "Envio creado correctamente" CRLF
+                       / "Error: formato incorrecto. Usa: CREAR_ENVIO ID ORIGEN DESTINO DESCRIPCION" CRLF
+                       / "Error: ya existe un envio con ese ID" CRLF
+
+respuesta-consultar    = envio-string CRLF
+                       / "Error: formato incorrecto. Usa: CONSULTAR_ENVIO ID" CRLF
+                       / "Error: envio no encontrado" CRLF
+
+respuesta-actualizar   = "Actualizando" CRLF
+                       / "El envio ya esta en su ultimo estado" CRLF
+                       / "Error: formato incorrecto. Usa: ACTUALIZAR_ENVIO ID" CRLF
+                       / "Error: envio no encontrado" CRLF
+
+respuesta-listar       = "No hay envios registrados" CRLF
+                       / lista-envios CRLF
+
+respuesta-generica     = "Comando recibido por " TEXT CRLF
+
+; =========================================================
+; FORMATO DE ENVIO DEVUELTO POR toString()
+; =========================================================
+
+envio-string           = "Envio{"
+                         "idEnvio='" id-envio "'"
+                         ", origen='" origen "'"
+                         ", destino='" destino "'"
+                         ", descripcion='" descripcion "'"
+                         ", usuarioCreador='" usuario-creador "'"
+                         ", estado=" estado-envio
+                         ", fechaCreacion=" fecha
+                         "}"
+
+estado-envio           = "CREADO"
+                       / "EN_TRANSITO"
+                       / "ENTREGADO"
+
+fecha                  = 2DIGIT "/" 2DIGIT "/" 4DIGIT SP
+                         2DIGIT ":" 2DIGIT ":" 2DIGIT
+
+lista-envios           = 1*("[" envio-string "] ")
