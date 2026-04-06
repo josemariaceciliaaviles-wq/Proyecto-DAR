@@ -1,6 +1,5 @@
 ; =========================================================
 ; PROTOCOLO CLIENTE-SERVIDOR DE GESTION DE ENVIOS
-; ABNF basada en el codigo implementado
 ; =========================================================
 
 ALPHA          = %x41-5A / %x61-7A
@@ -67,9 +66,6 @@ destino                = TOKEN
 descripcion            = TOKEN
 usuario-creador        = TOKEN / "null"
 
-; Nota:
-; En el codigo actual descripcion se obtiene con split(" ")
-; y por tanto solo admite una palabra sin espacios.
 
 ; =========================================================
 ; RESPUESTAS DEL SERVIDOR
