@@ -104,10 +104,8 @@ public class Procesador {
                         } else if (e.getEstado() == EstadoEnvio.EN_TRANSITO) {
                             e.setEstado(EstadoEnvio.ENTREGADO);
                         } else if (e.getEstado() == EstadoEnvio.ENTREGADO) {
-                            e.setEstado(EstadoEnvio.INCIDENCIA);
-                        } else if (e.getEstado() == EstadoEnvio.INCIDENCIA) {
                             return "El envio ya esta en su ultimo estado";
-                        }
+                        } 
 
                      return "Actualizando";
                     }
