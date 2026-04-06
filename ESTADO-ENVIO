@@ -8,6 +8,5 @@ package modelo;
 public enum EstadoEnvio {
     CREADO,
     EN_TRANSITO,
-    ENTREGADO,
-    INCIDENCIA
+    ENTREGADO
 }
