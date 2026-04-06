@@ -1,0 +1,13 @@
+
+package modelo;
+
+/**
+ *
+ * @author jmcecilia
+ */
+public enum EstadoEnvio {
+    CREADO,
+    EN_TRANSITO,
+    ENTREGADO,
+    INCIDENCIA
+}
