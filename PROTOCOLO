@@ -90,22 +90,26 @@ public class Procesador {
             } else if (mensaje.startsWith("ACTUALIZAR_ENVIO")) {
                 String[] partes = mensaje.split(" ");
 
-                if (partes.length != 3) {
-                    return "Error: formato incorrecto. Usa: ACTUALIZAR_ENVIO ID ESTADO";
+                if (partes.length != 2) {
+                    return "Error: formato incorrecto. Usa: ACTUALIZAR_ENVIO ID";
                 }
 
                 String idEnvio = partes[1];
-                String nuevoEstadoTexto = partes[2];
 
                 for (Envio e : envios) {
                     if (e.getIdEnvio().equalsIgnoreCase(idEnvio)) {
-                        try {
-                            EstadoEnvio nuevoEstado = EstadoEnvio.valueOf(nuevoEstadoTexto.toUpperCase());
-                            e.setEstado(nuevoEstado);
-                            return "Estado actualizado correctamente";
-                        } catch (IllegalArgumentException ex) {
-                            return "Error: estado no valido";
+
+                        if (e.getEstado() == EstadoEnvio.CREADO) {
+                            e.setEstado(EstadoEnvio.EN_TRANSITO);
+                        } else if (e.getEstado() == EstadoEnvio.EN_TRANSITO) {
+                            e.setEstado(EstadoEnvio.ENTREGADO);
+                        } else if (e.getEstado() == EstadoEnvio.ENTREGADO) {
+                            e.setEstado(EstadoEnvio.INCIDENCIA);
+                        } else if (e.getEstado() == EstadoEnvio.INCIDENCIA) {
+                            return "El envio ya esta en su ultimo estado";
                         }
+
+                     return "Actualizando";
                     }
                 }
 
