@@ -1,0 +1,137 @@
+package protocolo;
+
+import java.util.ArrayList;
+import modelo.Envio;
+import modelo.EstadoEnvio;
+import modelo.Usuario;
+
+/**
+ *
+ * @author jmcecilia
+ */
+public class Procesador {
+    
+    private Usuario usuarioValido;
+    private int estado = 0;
+    private ArrayList<Envio> envios;
+
+    public Procesador() {
+        this.usuarioValido = new Usuario("admin", "finisterre");
+        this.envios = new ArrayList<Envio>();
+    }
+
+    public String procesarMensaje(String mensaje, boolean autenticado, String usuarioActual) {
+
+        if (estado == 0) {
+            String loginEsperado = "" + usuarioValido.getNombreUsuario() + " " + usuarioValido.getContrasena();
+
+            if (mensaje.equals(loginEsperado)) {
+                estado = 1;
+                return "Login correcto";
+            } else if (mensaje.equals("Salir")) {
+                return "Conexion cerrada";
+            } else {
+                return "Credenciales incorrectas.";
+            }
+        }
+
+        if (estado == 1) {
+            if (mensaje.equals("LOGOUT")) {
+                estado = 0;
+                return "Logout Correcto";
+                
+            } else if (mensaje.equals("Ping")) {
+                return "Pong";
+                
+            } else if (mensaje.equals("Salir")) {
+                estado = 0;
+                return "Conexion cerrada";
+                
+            } else if (mensaje.startsWith("CREAR_ENVIO")) {
+                String[] partes = mensaje.split(" ");
+
+                if (partes.length < 5) {
+                    return "Error: formato incorrecto. Usa: CREAR_ENVIO ID ORIGEN DESTINO DESCRIPCION";
+                }
+
+                String idEnvio = partes[1];
+                String origen = partes[2];
+                String destino = partes[3];
+                String descripcion = partes[4];
+
+                for (Envio e : envios) {
+                    if (e.getIdEnvio().equalsIgnoreCase(idEnvio)) {
+                        return "Error: ya existe un envio con ese ID";
+                    }
+                }
+
+                Envio nuevoEnvio = new Envio(idEnvio, origen, destino, descripcion, usuarioActual);
+                envios.add(nuevoEnvio);
+
+                return "Envio creado correctamente";
+                
+            } else if (mensaje.startsWith("CONSULTAR_ENVIO")) {
+                String[] partes = mensaje.split(" ");
+
+                if (partes.length != 2) {
+                    return "Error: formato incorrecto. Usa: CONSULTAR_ENVIO ID";
+                }
+
+                String idEnvio = partes[1];
+
+                for (Envio e : envios) {
+                    if (e.getIdEnvio().equalsIgnoreCase(idEnvio)) {
+                        return e.toString();
+                    }
+                }
+
+                return "Error: envio no encontrado";
+                
+            } else if (mensaje.startsWith("ACTUALIZAR_ENVIO")) {
+                String[] partes = mensaje.split(" ");
+
+                if (partes.length != 3) {
+                    return "Error: formato incorrecto. Usa: ACTUALIZAR_ENVIO ID ESTADO";
+                }
+
+                String idEnvio = partes[1];
+                String nuevoEstadoTexto = partes[2];
+
+                for (Envio e : envios) {
+                    if (e.getIdEnvio().equalsIgnoreCase(idEnvio)) {
+                        try {
+                            EstadoEnvio nuevoEstado = EstadoEnvio.valueOf(nuevoEstadoTexto.toUpperCase());
+                            e.setEstado(nuevoEstado);
+                            return "Estado actualizado correctamente";
+                        } catch (IllegalArgumentException ex) {
+                            return "Error: estado no valido";
+                        }
+                    }
+                }
+
+                return "Error: envio no encontrado";
+                
+            } else if (mensaje.equals("LISTAR_ENVIOS")) {
+                if (envios.isEmpty()) {
+                    return "No hay envios registrados";
+                }
+
+                String resultado = "";
+                for (Envio e : envios) {
+                    resultado += "[" + e.toString() + "] ";
+                }
+
+                return resultado;
+                
+            } else {
+                return "Comando recibido por " + usuarioActual;
+            }
+        }
+
+        return " ";
+    }
+
+    public String getNombreUsuarioValido() {
+        return usuarioValido.getNombreUsuario();
+    }
+}
