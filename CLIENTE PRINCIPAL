@@ -1,0 +1,51 @@
+package cliente;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+public class Cliente_Principal {
+
+    public static void main(String[] args) {
+        String host = "192.168.56.103"; // Cambiar por la IP del servidor cuando uséis dos máquinas
+        int puerto = 5000;
+
+        GestorConexion conexion = new GestorConexion();
+
+        if (!conexion.conectar(host, puerto)) {
+            System.out.println("No se pudo conectar con el servidor.");
+            return;
+        }
+
+        try {
+            BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
+
+            String respuestaInicial = conexion.recibirMensaje();
+            if (respuestaInicial != null) {
+                System.out.println("Servidor: " + respuestaInicial);
+            }
+
+            String mensaje;
+
+            do {
+                System.out.print("Tu: ");
+                mensaje = teclado.readLine();
+
+                conexion.enviarMensaje(mensaje);
+
+                String respuesta = conexion.recibirMensaje();
+                if (respuesta != null) {
+                    System.out.println("Servidor: " + respuesta);
+                } else {
+                    System.out.println("El servidor cerró la conexión.");
+                    break;
+                }
+
+            } while (!mensaje.equalsIgnoreCase("Salir"));
+
+            conexion.cerrarConexion();
+
+        } catch (Exception e) {
+            System.out.println("Error en el cliente: " + e.getMessage());
+        }
+    }
+}
