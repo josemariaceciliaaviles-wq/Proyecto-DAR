@@ -19,7 +19,7 @@ El sistema contempla al menos las siguientes funcionalidades:
 - **Creación de envíos**
 - **Consulta de envíos**
 - **Actualización del estado de un envío**
-- **Mensajes de control del protocolo** como `PING` o `LOGOUT`
+- **Mensajes de control del protocolo** como PING o LOGOUT
 
 Además, el protocolo incorpora un comportamiento basado en **estados**, de forma que determinadas operaciones solo pueden ejecutarse si el usuario ha iniciado sesión correctamente.
 
@@ -42,10 +42,10 @@ El servidor es el componente encargado de:
 
 Dentro del servidor, el procesamiento del protocolo suele estar separado en una clase o módulo específico, por ejemplo:
 
-- `Servidor`: gestiona la conexión de red.
-- `Procesador`: interpreta y procesa los mensajes del protocolo.
-- `Usuario`: representa las credenciales válidas o la identidad del usuario.
-- `Envio`: representa los datos de cada envío gestionado por el sistema.
+- Servidor: gestiona la conexión de red.
+- Procesador: interpreta y procesa los mensajes del protocolo.
+- Usuario: representa las credenciales válidas o la identidad del usuario.
+- Envio: representa los datos de cada envío gestionado por el sistema.
 
 ### 2.2. Cliente
 
@@ -66,7 +66,7 @@ El flujo básico de interacción es el siguiente:
 4. El servidor valida el acceso.
 5. Si la autenticación es correcta, el cliente puede enviar comandos del protocolo.
 6. El servidor procesa cada comando y devuelve una respuesta.
-7. La sesión puede finalizar mediante un comando de cierre, como `LOGOUT`.
+7. La sesión puede finalizar mediante un comando de cierre, como LOGOUT.
 
 ### 2.4. Modelo de estados
 
@@ -78,7 +78,7 @@ El protocolo sigue una lógica de estados sencilla:
 
 - **Estado 1: Autenticado**
   - El cliente puede ejecutar comandos permitidos del sistema.
-  - Ejemplos: crear envío, consultar envío, actualizar estado, `PING`, `LOGOUT`.
+  - Ejemplos: crear envío, consultar envío, actualizar estado, PING, LOGOUT.
 
 Este modelo evita que un cliente sin autenticar realice operaciones sobre los envíos.
 
@@ -104,12 +104,9 @@ Para ejecutar correctamente el proyecto es necesario preparar la comunicación e
 
 ## 4. Ejemplo de uso
 
-Supongamos que el servidor se ejecuta en una máquina cuya dirección IP es:
-  192.168.1.50
-y que el puerto configurado para la comunicación es:
-  5000
-En ese caso:
-  - En la máquina servidor se lanza el servidor y este queda esperando conexiones.
-  - En la máquina cliente se lanza el cliente, que deberá conectarse a la IP 192.168.1.50 usando el puerto 5000.
+Supongamos que el servidor se ejecuta en una máquina cuya dirección IP es 192.168.1.50 y que el puerto configurado para la comunicación es 5000. En ese caso:
+
+- En la máquina servidor se lanza el servidor, que queda esperando conexiones.
+- En la máquina cliente se lanza el cliente, que deberá conectarse a la IP 192.168.1.50 usando el puerto 5000.
 
 De este modo, la comunicación no se realiza en local, sino entre dos máquinas diferentes dentro de la misma red, que es el escenario previsto para la práctica.
