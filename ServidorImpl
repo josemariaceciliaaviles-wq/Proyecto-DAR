@@ -1,0 +1,126 @@
+package es.ugr.practicas.envios.servidor;
+
+import es.ugr.practicas.envios.modelo.Envio;
+import es.ugr.practicas.envios.modelo.EstadoEnvio;
+import es.ugr.practicas.envios.modelo.Usuario;
+import es.ugr.practicas.envios.remoto.ServicioEnvios;
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ServicioEnviosImpl extends UnicastRemoteObject implements ServicioEnvios {
+
+    private static final long serialVersionUID = 1L;
+
+    private final Usuario usuarioValido;
+    private final Map<String, Envio> envios;
+    private final Map<String, String> sesiones;
+
+    public ServicioEnviosImpl() throws RemoteException {
+        super();
+        this.usuarioValido = new Usuario("admin", "finisterre");
+        this.envios = new ConcurrentHashMap<>();
+        this.sesiones = new ConcurrentHashMap<>();
+    }
+
+    private boolean sesionValida(String token) {
+        return token != null && sesiones.containsKey(token);
+    }
+
+    @Override
+    public synchronized String login(String usuario, String contrasena) throws RemoteException {
+        if (usuarioValido.getNombreUsuario().equals(usuario)
+                && usuarioValido.getContrasena().equals(contrasena)) {
+            String token = UUID.randomUUID().toString();
+            sesiones.put(token, usuario);
+            return token;
+        }
+        return null;
+    }
+
+    @Override
+    public synchronized String logout(String token) throws RemoteException {
+        if (!sesionValida(token)) {
+            return "Error: sesion no valida";
+        }
+
+        sesiones.remove(token);
+        return "Logout correcto";
+    }
+
+    @Override
+    public synchronized String crearEnvio(String token, String id, String origen, String destino, String receptor)
+            throws RemoteException {
+
+        if (!sesionValida(token)) {
+            return "Error: sesion no valida";
+        }
+
+        if (id == null || id.isBlank()
+                || origen == null || origen.isBlank()
+                || destino == null || destino.isBlank()
+                || receptor == null || receptor.isBlank()) {
+            return "Error: faltan datos del envio";
+        }
+
+        if (envios.containsKey(id)) {
+            return "Error: ya existe un envio con ese ID";
+        }
+
+        Envio nuevoEnvio = new Envio(id, origen, destino, receptor);
+        envios.put(id, nuevoEnvio);
+
+        return "Envio creado correctamente";
+    }
+
+    @Override
+    public synchronized Envio consultarEnvio(String token, String id) throws RemoteException {
+        if (!sesionValida(token)) {
+            throw new RemoteException("Sesion no valida");
+        }
+
+        return envios.get(id);
+    }
+
+    @Override
+    public synchronized String actualizarEnvio(String token, String id) throws RemoteException {
+        if (!sesionValida(token)) {
+            return "Error: sesion no valida";
+        }
+
+        Envio envio = envios.get(id);
+
+        if (envio == null) {
+            return "Error: envio no encontrado";
+        }
+
+        EstadoEnvio estadoActual = envio.getEstado();
+
+        switch (estadoActual) {
+            case PENDIENTE:
+                envio.setEstado(EstadoEnvio.EN_TRANSITO);
+                return "Estado actualizado a EN_TRANSITO";
+            case EN_TRANSITO:
+                envio.setEstado(EstadoEnvio.ENTREGADO);
+                return "Estado actualizado a ENTREGADO";
+            case ENTREGADO:
+                return "El envio ya esta en su estado final";
+            default:
+                return "Error: estado no valido";
+        }
+    }
+
+    @Override
+    public synchronized List<Envio> listarEnvios(String token) throws RemoteException {
+        if (!sesionValida(token)) {
+            throw new RemoteException("Sesion no valida");
+        }
+
+        return new ArrayList<>(envios.values());
+    }
+}
