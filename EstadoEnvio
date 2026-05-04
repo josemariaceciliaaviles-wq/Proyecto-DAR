@@ -1,0 +1,9 @@
+package es.ugr.practicas.envios.modelo;
+
+import java.io.Serializable;
+
+public enum EstadoEnvio implements Serializable {
+    PENDIENTE,
+    EN_TRANSITO,
+    ENTREGADO
+}
