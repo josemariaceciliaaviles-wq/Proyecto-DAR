@@ -1,0 +1,205 @@
+package es.ugr.practicas.envios.cliente;
+
+import es.ugr.practicas.envios.modelo.Envio;
+import es.ugr.practicas.envios.remoto.ServicioEnvios;
+
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.List;
+import java.util.Scanner;
+
+public class ClienteRMI {
+
+    private static final String NOMBRE_SERVICIO = "ServicioEnvios";
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String token = null;
+
+        try {
+            System.out.print("Introduce la IP del servidor: ");
+            String ipServidor = sc.nextLine();
+
+            System.out.print("Introduce el puerto RMI (1099 por defecto): ");
+            String puertoTexto = sc.nextLine();
+
+            int puerto;
+            if (puertoTexto == null || puertoTexto.isBlank()) {
+                puerto = 1099;
+            } else {
+                puerto = Integer.parseInt(puertoTexto);
+            }
+
+            Registry registry = LocateRegistry.getRegistry(ipServidor, puerto);
+            ServicioEnvios servicio = (ServicioEnvios) registry.lookup(NOMBRE_SERVICIO);
+
+            int opcion;
+            do {
+                System.out.println("\n===== MENU CLIENTE RMI =====");
+                System.out.println("1. Login");
+                System.out.println("2. Crear envio");
+                System.out.println("3. Consultar envio");
+                System.out.println("4. Actualizar envio");
+                System.out.println("5. Listar envios");
+                System.out.println("6. Logout");
+                System.out.println("0. Salir");
+                System.out.print("Seleccione una opcion: ");
+
+                String entrada = sc.nextLine();
+                opcion = Integer.parseInt(entrada);
+
+                switch (opcion) {
+                    case 1:
+                        if (token != null) {
+                            System.out.println("Ya hay una sesion iniciada.");
+                            break;
+                        }
+
+                        System.out.print("Usuario: ");
+                        String usuario = sc.nextLine();
+
+                        System.out.print("Contrasena: ");
+                        String contrasena = sc.nextLine();
+
+                        try {
+                            String tokenRecibido = servicio.login(usuario, contrasena);
+                            if (tokenRecibido != null) {
+                                token = tokenRecibido;
+                                System.out.println("Login correcto.");
+                                System.out.println("Token de sesion: " + token);
+                            } else {
+                                System.out.println("Credenciales incorrectas.");
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Error remoto durante el login: " + e.getMessage());
+                        }
+                        break;
+
+                    case 2:
+                        if (token == null) {
+                            System.out.println("Debes iniciar sesion primero.");
+                            break;
+                        }
+
+                        System.out.print("ID del envio: ");
+                        String id = sc.nextLine();
+
+                        System.out.print("Origen: ");
+                        String origen = sc.nextLine();
+
+                        System.out.print("Destino: ");
+                        String destino = sc.nextLine();
+
+                        System.out.print("Receptor: ");
+                        String receptor = sc.nextLine();
+
+                        try {
+                            String respuestaCrear = servicio.crearEnvio(token, id, origen, destino, receptor);
+                            System.out.println(respuestaCrear);
+                        } catch (RemoteException e) {
+                            System.out.println("Error remoto al crear el envio: " + e.getMessage());
+                        }
+                        break;
+
+                    case 3:
+                        if (token == null) {
+                            System.out.println("Debes iniciar sesion primero.");
+                            break;
+                        }
+
+                        System.out.print("ID del envio a consultar: ");
+                        String idConsulta = sc.nextLine();
+
+                        try {
+                            Envio envio = servicio.consultarEnvio(token, idConsulta);
+                            if (envio != null) {
+                                System.out.println("Envio encontrado:");
+                                System.out.println(envio);
+                            } else {
+                                System.out.println("Envio no encontrado.");
+                            }
+                        } catch (RemoteException e) {
+                            System.out.println("Error remoto al consultar el envio: " + e.getMessage());
+                        }
+                        break;
+
+                    case 4:
+                        if (token == null) {
+                            System.out.println("Debes iniciar sesion primero.");
+                            break;
+                        }
+
+                        System.out.print("ID del envio a actualizar: ");
+                        String idActualizar = sc.nextLine();
+
+                        try {
+                            String respuestaActualizar = servicio.actualizarEnvio(token, idActualizar);
+                            System.out.println(respuestaActualizar);
+                        } catch (RemoteException e) {
+                            System.out.println("Error remoto al actualizar el envio: " + e.getMessage());
+                        }
+                        break;
+
+                    case 5:
+                        if (token == null) {
+                            System.out.println("Debes iniciar sesion primero.");
+                            break;
+                        }
+
+                        try {
+                            List<Envio> envios = servicio.listarEnvios(token);
+
+                            if (envios == null || envios.isEmpty()) {
+                                System.out.println("No hay envios registrados.");
+                            } else {
+                                System.out.println("Listado de envios:");
+                                for (Envio envio : envios) {
+                                    System.out.println(envio);
+                                }
+                            }
+                        } catch (RemoteException e) {
+                            System.out.println("Error remoto al listar envios: " + e.getMessage());
+                        }
+                        break;
+
+                    case 6:
+                        if (token == null) {
+                            System.out.println("No hay ninguna sesion iniciada.");
+                            break;
+                        }
+
+                        try {
+                            String respuestaLogout = servicio.logout(token);
+                            System.out.println(respuestaLogout);
+                            token = null;
+                        } catch (RemoteException e) {
+                            System.out.println("Error remoto durante el logout: " + e.getMessage());
+                        }
+                        break;
+
+                    case 0:
+                        System.out.println("Cerrando cliente...");
+                        break;
+
+                    default:
+                        System.out.println("Opcion no valida.");
+                }
+
+            } while (opcion != 0);
+
+        } catch (NumberFormatException e) {
+            System.out.println("Error: debes introducir un numero valido.");
+        } catch (NotBoundException e) {
+            System.out.println("Error: el servicio remoto no esta registrado con ese nombre.");
+        } catch (RemoteException e) {
+            System.out.println("Error de comunicacion con el servidor: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error general en el cliente: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            sc.close();
+        }
+    }
+}
