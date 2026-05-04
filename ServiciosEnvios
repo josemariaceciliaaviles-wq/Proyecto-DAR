@@ -1,0 +1,22 @@
+package es.ugr.practicas.envios.remoto;
+
+import es.ugr.practicas.envios.modelo.Envio;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.List;
+
+public interface ServicioEnvios extends Remote {
+
+    String login(String usuario, String contrasena) throws RemoteException;
+
+    String logout(String token) throws RemoteException;
+
+    String crearEnvio(String token, String id, String origen, String destino, String receptor) throws RemoteException;
+
+    Envio consultarEnvio(String token, String id) throws RemoteException;
+
+    String actualizarEnvio(String token, String id) throws RemoteException;
+
+    List<Envio> listarEnvios(String token) throws RemoteException;
+}
