@@ -5,6 +5,8 @@ Para ejecutar la aplicación, primero hay que iniciar el servidor RMI.
 Por defecto, la aplicación utiliza la siguiente configuración:
 
 IP del servidor: 192.168.0.10  
+(la IP del servidor corresponde, al menos en nuestro caso, a la IP de la máquina virtual donde se ejecuta el servidor)
+
 Puerto: 1099
 
 Después, se debe ejecutar el cliente. Al iniciar el cliente, se pedirá introducir la IP y el puerto del servidor.
@@ -25,6 +27,7 @@ Desde el menú se podrán realizar las operaciones implementadas, como iniciar s
 1. Ejecutar el servidor.
 2. Ejecutar el cliente.
 3. Introducir la IP del servidor: 192.168.0.10
+   - En nuestro caso, esta IP corresponde a la IP de la máquina virtual donde se ejecuta el servidor.
 4. Introducir el puerto: 1099
    - También se puede pulsar Enter para usar el puerto por defecto.
 5. Iniciar sesión con:
