@@ -1,0 +1,233 @@
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
+from typing import List, Optional
+
+app = FastAPI(
+    title="API REST de Gestión de Envíos",
+    description="API REST desarrollada con FastAPI para transformar el sistema cliente-servidor de gestión de envíos (RMI/Java) en un servicio web REST. Permite crear, consultar, actualizar y eliminar envíos, así como gestionar sesiones de usuario.",
+    version="1.0.0",
+    contact={
+        "name": "Grupo JMCA y JPGC",
+    },
+    license_info={
+        "name": "UGR"
+    }
+)
+
+# -----------------------------
+# MODELOS
+# -----------------------------
+
+class LoginRequest(BaseModel):
+    usuario: str
+    contrasena: str
+
+
+class EnvioCreate(BaseModel):
+    id: str
+    origen: str
+    destino: str
+    destinatario: str
+
+
+class Envio(BaseModel):
+    id: str
+    origen: str
+    destino: str
+    destinatario: str
+    estado: str
+
+
+class AccionUpdate(BaseModel):
+    accion: Optional[str] = None
+
+
+# -----------------------------
+# DATOS EN MEMORIA
+# -----------------------------
+
+usuario_valido = {
+    "usuario": "admin",
+    "contrasena": "finisterre"
+}
+
+SECUENCIA_ESTADOS = ["CREADO", "EN_TRANSITO", "EN_REPARTO", "ENTREGADO"]
+
+envios: dict[str, Envio] = {}
+
+
+# -----------------------------
+# ENDPOINT INICIAL
+# -----------------------------
+
+@app.get(
+    "/",
+    summary="Estado de la API",
+    description="Devuelve un mensaje confirmando que la API está operativa."
+)
+def inicio():
+    return {
+        "mensaje": "API REST de Gestión de Envíos funcionando correctamente"
+    }
+
+
+# -----------------------------
+# SESIONES
+# -----------------------------
+
+@app.post(
+    "/sesiones",
+    status_code=status.HTTP_201_CREATED,
+    summary="Iniciar sesión",
+    description="Autentica al usuario con sus credenciales. Equivalente al método login() de la Práctica 2.",
+    tags=["Sesiones"]
+)
+def iniciar_sesion(datos: LoginRequest):
+    if datos.usuario == usuario_valido["usuario"] and datos.contrasena == usuario_valido["contrasena"]:
+        return {
+            "mensaje": "Login correcto",
+            "usuario": datos.usuario
+        }
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales incorrectas"
+    )
+
+
+@app.delete(
+    "/sesiones",
+    status_code=status.HTTP_200_OK,
+    summary="Cerrar sesión",
+    description="Cierra la sesión activa del usuario. Equivalente al método logout() de la Práctica 2. Al ser una API stateless, no se gestiona token de sesión.",
+    tags=["Sesiones"]
+)
+def cerrar_sesion():
+    return {
+        "mensaje": "Sesión cerrada correctamente"
+    }
+
+
+# -----------------------------
+# ENVÍOS
+# -----------------------------
+
+@app.post(
+    "/envios",
+    response_model=Envio,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear envío",
+    description="Crea un nuevo envío con estado inicial CREADO. Equivalente al método crearEnvio() de la Práctica 2.",
+    tags=["Envíos"]
+)
+def crear_envio(datos: EnvioCreate):
+    if datos.id in envios:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un envío con ese ID"
+        )
+    nuevo_envio = Envio(
+        id=datos.id,
+        origen=datos.origen,
+        destino=datos.destino,
+        destinatario=datos.destinatario,
+        estado="CREADO"
+    )
+    envios[datos.id] = nuevo_envio
+    return nuevo_envio
+
+
+@app.get(
+    "/envios",
+    response_model=List[Envio],
+    status_code=status.HTTP_200_OK,
+    summary="Listar envíos",
+    description="Devuelve la lista de todos los envíos registrados. Equivalente al método listarEnvios() de la Práctica 2.",
+    tags=["Envíos"]
+)
+def listar_envios():
+    return list(envios.values())
+
+
+@app.get(
+    "/envios/{id_envio}",
+    response_model=Envio,
+    status_code=status.HTTP_200_OK,
+    summary="Consultar envío",
+    description="Devuelve los datos de un envío concreto por su ID. Equivalente al método consultarEnvio() de la Práctica 2.",
+    tags=["Envíos"]
+)
+def consultar_envio(id_envio: str):
+    if id_envio not in envios:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Envío no encontrado"
+        )
+    return envios[id_envio]
+
+
+@app.patch(
+    "/envios/{id_envio}",
+    response_model=Envio,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar envío",
+    description=(
+        "Avanza el estado del envío al siguiente en la secuencia: "
+        "CREADO → EN_TRANSITO → EN_REPARTO → ENTREGADO. "
+        "Para cancelar, enviar body: {\"accion\": \"cancelar\"}. "
+        "Para avanzar estado, enviar body vacío: {}. "
+        "Equivalente al método actualizarEnvio() de la Práctica 2."
+    ),
+    tags=["Envíos"]
+)
+def actualizar_estado_envio(id_envio: str, datos: AccionUpdate = AccionUpdate()):
+    if id_envio not in envios:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Envío no encontrado"
+        )
+
+    envio = envios[id_envio]
+
+    if datos.accion == "cancelar":
+        if envio.estado == "ENTREGADO":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede cancelar un envío ya entregado"
+            )
+        envio.estado = "CANCELADO"
+        return envio
+
+    if envio.estado == "ENTREGADO":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El envío ya ha sido entregado"
+        )
+    if envio.estado == "CANCELADO":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede avanzar un envío cancelado"
+        )
+
+    indice_actual = SECUENCIA_ESTADOS.index(envio.estado)
+    envio.estado = SECUENCIA_ESTADOS[indice_actual + 1]
+    return envio
+
+
+@app.delete(
+    "/envios/{id_envio}",
+    status_code=status.HTTP_200_OK,
+    summary="Eliminar envío",
+    description="Elimina un envío del sistema por su ID.",
+    tags=["Envíos"]
+)
+def eliminar_envio(id_envio: str):
+    if id_envio not in envios:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Envío no encontrado"
+        )
+    envio_eliminado = envios.pop(id_envio)
+    return {
+        "mensaje": "Envío eliminado correctamente",
+        "envio": envio_eliminado
+    }
